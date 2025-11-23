@@ -7,6 +7,7 @@ import happybase
 spark = SparkSession.builder.appName("MLlib GradesMLPrediction").enableHiveSupport().getOrCreate()
 
 # Step 2: Load the data from the Hive table 'gradesml' into a Spark DataFrame
+
 df = spark.sql("""SELECT
                 `Car ID`,
                  CAST(Mileage AS INT) AS Mileage,
@@ -42,8 +43,8 @@ print(f"R^2: {test_results.r2}")
 # ---- Write metrics to HBase with happybase (using the provided pattern) ----
 
 data = [
-('metrics1', 'value:rmse', str(test_results.rootMeanSquaredError)),
-('metrics1', 'value:r2', str(test_results.r2)),
+('metrics1', 'cf:rmse', str(test_results.rootMeanSquaredError)),
+('metrics1', 'cf:r2', str(test_results.r2)),
 ]
 
 # Function to write data to HBase inside each partition
