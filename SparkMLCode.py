@@ -9,7 +9,6 @@ spark = SparkSession.builder.appName("MLlib GradesMLPrediction").enableHiveSuppo
 # Step 2: Load the data from the Hive table 'gradesml' into a Spark DataFrame
 
 df = spark.sql("""SELECT
-                `Car ID`,
                  CAST(Mileage AS INT) AS Mileage,
                  CAST(Price AS INT) AS Price
                 FROM man_car_price_pred
