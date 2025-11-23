@@ -8,20 +8,20 @@ spark = SparkSession.builder.appName("MLlib GradesMLPrediction").enableHiveSuppo
 
 # Step 2: Load the data from the Hive table 'gradesml' into a Spark DataFrame
 df = spark.sql("""SELECT
-			   'Car ID'
-			    CAST(Mileage AS INT) AS Mileage,
-			    CAST(Price AS INT) AS Price
-			   FROM man_car_price_pred
-			   """)
+                `Car ID`,
+                 CAST(Mileage AS INT) AS Mileage,
+                 CAST(Price AS INT) AS Price
+                FROM man_car_price_pred
+                """)
 
 # Step 3: Handle null values by either dropping or filling them
 df = df.na.drop() # Drop rows with nullvalues
 
 # Step 4: Prepare the data for MLlib by assembling features into a vector
 assembler = VectorAssembler(
-	inputCols=["Mileage"],
-	outputCol="features",
-	handleInvalid="skip" # Skip rows with null values
+    inputCols=["Mileage"],
+    outputCol="features",
+    handleInvalid="skip" # Skip rows with null values
 )
 assembled_df = assembler.transform(df).select("features","Price")
 
@@ -40,21 +40,21 @@ print(f"RMSE: {test_results.rootMeanSquaredError}")
 print(f"R^2: {test_results.r2}")
 
 # ---- Write metrics to HBase with happybase (using the provided pattern) ----
-# Example data (row_key, column_family:column, value) populated with the metrics
+
 data = [
-('metrics1', 'cf:rmse', str(test_results.rootMeanSquaredError)),
-('metrics1', 'cf:r2', str(test_results.r2)),
+('metrics1', 'value:rmse', str(test_results.rootMeanSquaredError)),
+('metrics1', 'value:r2', str(test_results.r2)),
 ]
 
 # Function to write data to HBase inside each partition
 def write_to_hbase_partition(partition):
-	connection = happybase.Connection('master')
-	connection.open()
-	table = connection.table('my_table') # Update table name
-	for row in partition:
-		row_key, column, value = row
-		table.put(row_key, {column: value})
-	connection.close()
+    connection = happybase.Connection('master')
+    connection.open()
+    table = connection.table('my_table') # Update table name
+    for row in partition:
+        row_key, column, value = row
+        table.put(row_key, {column: value})
+    connection.close()
 
 # Parallelize data and apply the function with foreachPartition
 rdd = spark.sparkContext.parallelize(data)
